@@ -1,0 +1,90 @@
+/*
+  ------------------------------------------------------------
+  Ohm Meter with Custom Omega Symbol (Ω)
+  ------------------------------------------------------------
+  Goal of the Program:
+    - Measure an unknown resistance using a voltage divider.
+    - Read the voltage from the analog pin (A0).
+    - Calculate resistance using Ohm’s law.
+    - Display the resistance on a 16x2 LCD screen.
+    - Show a custom Ω symbol stored in LCD memory.
+
+  Main Theme:
+    - Analog input reading (voltage)
+    - Calculating electrical resistance
+    - Displaying measurements on a character LCD
+    - Using custom characters on LCDs
+
+  Hardware:
+    LCD RS  → 12           LCD RW  → GND
+    LCD E   → 11           LCD VSS → GND
+    LCD D4  → 5            LCD VCC → +5V
+    LCD D5  → 4            10K Pot → LCD VO (contrast)
+    LCD D6  → 3
+    LCD D7  → 2
+    Voltage divider with known 10kΩ resistor → A0
+
+  ------------------------------------------------------------
+*/
+
+#include <LiquidCrystal.h>   // Include LCD library
+
+// Assign LCD pin numbers
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+
+// Create LCD object using the defined pins
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+// Define custom Ω symbol (8 rows, 5 bits each)
+byte omega[8] = {
+  0b00000,   // Row 1
+  0b01110,   // Row 2
+  0b10001,   // Row 3
+  0b10001,   // Row 4
+  0b10001,   // Row 5
+  0b01010,   // Row 6
+  0b11011,   // Row 7
+  0b00000    // Row 8
+};
+
+// Known resistor in the voltage divider (10kΩ)
+const float R_known = 10000.0;
+
+void setup() {
+  lcd.begin(16, 2);         // Initialize LCD (16 columns, 2 rows)
+  lcd.createChar(0, omega); // Load custom Ω symbol into memory slot 0
+}
+
+void loop() {
+  int sensorValue = analogRead(A0);             // Read voltage on analog pin A0
+  float Vout = sensorValue * (5.0 / 1023.0);    // Convert ADC to actual voltage
+  float I = (5.0 - Vout) / R_known;             // Current through known resistor
+  float R_unknown = Vout / I;                   // Calculate unknown resistance
+
+  // Condition: Avoid division-by-zero and show a startup animation
+  if (R_unknown == Vout / 0) {  
+    lcd.clear();                 // Clear screen
+    lcd.setCursor(0, 0);         // Position cursor at row 0, column 0
+    lcd.print("Ohm Meter Ready!"); // Display message
+    delay(1000);                 // Hold message for 1 second
+
+    // Scroll text animation across display
+    for (int positionCounter = 0; positionCounter < 38; positionCounter++) {
+      lcd.scrollDisplayRight();  // Move displayed text to the right
+      delay(150);                // Slow down scrolling animation
+    }
+  }
+
+  else {
+    lcd.clear();                 // Clear the LCD
+    lcd.setCursor(0, 0);         // Move cursor to first line
+    lcd.print("Resistance:");    // Label for measurement
+
+    lcd.setCursor(0, 1);         // Move to second line
+    lcd.print(R_unknown, 2);     // Display resistance with 2 decimal places
+    lcd.write(byte(0));          // Print custom Ω character
+    lcd.print("       ");        // Space to overwrite old characters if value shrinks
+
+    delay(500);                  // Delay for display stability
+  }
+}
