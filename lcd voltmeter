@@ -1,0 +1,74 @@
+/*
+  ------------------------------------------------------------
+  LiquidCrystal Hello World — Fully Commented Version
+  ------------------------------------------------------------
+  Goal of the Program:
+    - Demonstrate the use of a 16x2 LCD with the LiquidCrystal library.
+    - Read an analog voltage on A0, convert it to a real voltage value.
+    - Display the voltage and elapsed time on the LCD.
+
+  Main Theme:
+    - LCD communication using the HD44780 driver.
+    - Analog-to-digital conversion (ADC) on Arduino.
+    - Basic LCD printing and cursor positioning.
+
+  Wiring:
+    LCD RS  → 12
+    LCD Enable → 11
+    LCD D4   → 5
+    LCD D5   → 4
+    LCD D6   → 3
+    LCD D7   → 2
+    LCD RW   → GND
+    LCD VSS  → GND
+    LCD VCC  → +5V
+    LCD VO (contrast) → middle pin of a 10k potentiometer
+
+    10K pot:
+      - One end → +5V
+      - Other end → GND
+      - Wiper (middle) → LCD pin 3 (VO)
+
+  ------------------------------------------------------------
+  The original Arduino example was created by:
+    David A. Mellis, Limor Fried, Tom Igoe, Arturo Guadalupi
+  And is in the public domain.
+  ------------------------------------------------------------
+*/
+
+// include the library code:
+#include <LiquidCrystal.h>       // LCD driver for HD44780-compatible screens
+
+// initialize LCD pins by mapping Arduino pins to LCD pins
+const int rs = 12,               // RS pin controls LCD register select
+          en = 11,               // Enable pin triggers LCD to read data
+          d4 = 5,                // LCD data pin 4
+          d5 = 4,                // LCD data pin 5
+          d6 = 3,                // LCD data pin 6
+          d7 = 2;                // LCD data pin 7
+
+// create LCD object using the defined pin assignments
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  lcd.begin(16, 2);              // Set LCD size to 16 columns × 2 rows
+  Serial.begin(9600);            // Start serial communication for debugging
+  // (No text printed here; handled inside loop)
+}
+
+void loop() {
+  lcd.setCursor(0, 0);           // Set cursor to column 0, row 0 (top line)
+
+  int V = analogRead(A0);        // Read analog input (0–1023)
+  
+  // Convert ADC value to real voltage (5V reference, 10-bit ADC)
+  float VA = V * (5.00 / 1023.0);
+
+  lcd.print(VA);                 // Print voltage value to the LCD
+
+  Serial.print("VA = ");         // Print label to Serial Monitor
+  Serial.println(VA);            // Print measured voltage
+
+  lcd.setCursor(0, 1);           // Move to column 0, row 1 (second line)
+  lcd.print(millis() / 1000);    // Print number of seconds since reset
+}
